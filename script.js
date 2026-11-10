@@ -1,16 +1,9 @@
 'use strict';
 
-// FRONTEND DEMO ONLY: Never put Paystack secret keys or server-side payment verification in browser JavaScript.
 const packages = {
   internationalPhysical: { name: 'International Physical Package', amount: '₦3,500,000' },
   ukResidents: { name: 'UK Residents Package', amount: '£250' },
   nigeriaOnline: { name: 'Nigeria / Online Participation Package', amount: 'Early Bird ₦100,000 / Standard ₦150,000' }
-};
-
-const paymentLinks = {
-  internationalPhysical: '[PHYSICAL_PAYMENT_LINK]',
-  ukResidents: '[UK_RESIDENT_PAYMENT_LINK]',
-  nigeriaOnline: '[ONLINE_PAYMENT_LINK]'
 };
 
 const menuToggle = document.getElementById('menuToggle');
@@ -36,43 +29,11 @@ const form = document.getElementById('registrationForm');
 const packageInput = document.getElementById('packageInput');
 const packageSummary = document.getElementById('packageSummary');
 const registrationStatus = document.getElementById('registrationStatus');
-function continueWithPayment(data, statusElement) {
-  const packageId = String(data.get('package') || '');
-  const chosen = packages[packageId];
-  if (!chosen) return false;
-  const paymentUrl = paymentLinks[packageId];
-  let grantEnquiry = null;
-  try {
-    const savedEnquiry = sessionStorage.getItem('jitGrantEnquiry');
-    grantEnquiry = savedEnquiry ? JSON.parse(savedEnquiry) : null;
-  } catch {
-    statusElement.textContent = 'Your grant application details could not be retrieved. Please return to the grant form and try again.';
-    return false;
-  }
-  if (!paymentUrl || paymentUrl.startsWith('[')) {
-    statusElement.textContent = 'Online payment is not available yet. Please contact JIT Travels at +234 707 989 0161.';
-    return false;
-  }
-  if (grantEnquiry && typeof grantEnquiry === 'object') {
-    statusElement.textContent = 'Your grant application has not been submitted. Application delivery is not available yet; please contact JIT Travels at +234 707 989 0161.';
-    return false;
-  }
-
-  let destination;
-  try {
-    destination = new URL(paymentUrl);
-  } catch {
-    statusElement.textContent = 'The payment link is invalid. Please contact JIT Travels at +234 707 989 0161.';
-    return false;
-  }
-  if (destination.protocol !== 'https:') {
-    statusElement.textContent = 'The payment link is not secure. Please contact JIT Travels at +234 707 989 0161.';
-    return false;
-  }
-
-  window.location.assign(destination.href);
-  return true;
-}
+const registrationSubmit = document.getElementById('registrationSubmit');
+const registrationSuccess = document.getElementById('registrationSuccess');
+const registrationId = document.getElementById('registrationId');
+let pendingRegistration = null;
+let submitting = false;
 
 document.querySelectorAll('[data-package]').forEach(button => button.addEventListener('click', () => {
   const selection = button.dataset.package;
@@ -80,6 +41,8 @@ document.querySelectorAll('[data-package]').forEach(button => button.addEventLis
   if (!chosen) return;
   form.reset();
   registrationStatus.textContent = '';
+  registrationSuccess.hidden = true;
+  registrationSubmit.hidden = false;
   packageInput.value = selection;
   packageSummary.textContent = `${chosen.name} • ${chosen.amount}`;
   try {
@@ -112,7 +75,7 @@ grantScreeningForm.addEventListener('submit', event => {
     grantScreeningStatus.textContent = 'Your application details could not be saved in this browser. Please enable site storage and try again.';
     return;
   }
-  grantScreeningStatus.textContent = 'Details saved in this browser only. Your application has not yet been sent to the organisers.';
+  grantScreeningStatus.textContent = 'Details saved in this browser. Choose a package and submit the registration form to send them.';
   grantSubmit.disabled = true;
   grantSubmit.setAttribute('aria-busy', 'true');
   grantSubmitLabel.textContent = 'Preparing packages…';
@@ -125,14 +88,71 @@ grantScreeningForm.addEventListener('submit', event => {
   }, 3000);
 });
 
-document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+document.getElementById('closeDialog').addEventListener('click', () => { if (!submitting) dialog.close(); });
+dialog.addEventListener('click', event => { if (event.target === dialog && !submitting) dialog.close(); });
+dialog.addEventListener('cancel', event => { if (submitting) event.preventDefault(); });
 
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!form.reportValidity()) return;
+  if (submitting || !form.reportValidity()) return;
   const data = new FormData(form);
-  if (continueWithPayment(data, registrationStatus)) dialog.close();
+  let grantApplication;
+  try {
+    const savedGrant = sessionStorage.getItem('jitGrantEnquiry');
+    grantApplication = savedGrant ? JSON.parse(savedGrant) : null;
+  } catch {
+    registrationStatus.textContent = 'Your grant details could not be read. Please return to the grant form and try again.';
+    return;
+  }
+  const details = {
+    package: String(data.get('package') || ''),
+    fullName: String(data.get('fullName') || '').trim(),
+    email: String(data.get('email') || '').trim(),
+    phone: String(data.get('phone') || '').trim(),
+    business: String(data.get('business') || '').trim(),
+    grantApplication
+  };
+  const serialized = JSON.stringify(details);
+  if (!pendingRegistration || pendingRegistration.details !== serialized) {
+    if (!window.isSecureContext || !crypto.randomUUID) {
+      registrationStatus.textContent = 'Registration requires a secure HTTPS connection. Please open the published website and try again.';
+      return;
+    }
+    pendingRegistration = { id: crypto.randomUUID(), details: serialized };
+  }
+  submitting = true;
+  registrationSubmit.disabled = true;
+  registrationSubmit.textContent = 'Submitting registration…';
+  registrationStatus.textContent = '';
+  try {
+    const response = await fetch('/api/registrations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: pendingRegistration.id, ...details })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      registrationStatus.textContent = typeof result.error === 'string' ? result.error : 'Registration could not be saved. Please try again.';
+      return;
+    }
+    if (result.registrationId !== pendingRegistration.id) throw new Error('Invalid registration response');
+    registrationId.textContent = result.registrationId;
+    registrationSuccess.hidden = false;
+    registrationSubmit.hidden = true;
+    try {
+      sessionStorage.removeItem('jitGrantEnquiry');
+    } catch (error) {
+      console.error('Could not clear the saved grant details:', error);
+    }
+    pendingRegistration = null;
+  } catch (error) {
+    console.error('Registration request failed:', error);
+    registrationStatus.textContent = 'We could not confirm that your registration was saved. Please retry with the same details.';
+  } finally {
+    submitting = false;
+    registrationSubmit.disabled = false;
+    registrationSubmit.textContent = 'Submit registration';
+  }
 });
 
 // Event start: 14 December 2026 at midnight in London (GMT in December).

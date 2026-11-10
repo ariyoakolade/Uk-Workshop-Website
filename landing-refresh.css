@@ -150,6 +150,9 @@
 .hero-meta a{text-decoration:underline;text-underline-offset:3px}
 .form-status{min-height:1.5em;margin:8px 0;color:#9a211d;font-size:13px;font-weight:700}
 .form-status:empty{display:none}
+.registration-success{margin:12px 0;padding:16px;border:1px solid #d5e7d5;border-radius:12px;background:#f2faf2;color:#204b20;overflow-wrap:anywhere}
+.registration-success p{margin:8px 0 0;color:inherit;font-size:13px}
+.registration-success[hidden],#registrationSubmit[hidden]{display:none}
 .pricing-grid-three{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:1fr;max-width:1160px;align-items:stretch}
 .pricing-grid-three .price-card{padding:32px 25px}
 .pricing-grid-three .price-card.featured{transform:none;background:linear-gradient(180deg,#fffaf0,#fff)}

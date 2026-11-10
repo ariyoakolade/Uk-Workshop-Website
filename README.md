@@ -1,33 +1,65 @@
 # JIT Travels UK Strategic Business Growth Workshop 2026
 
-## Step 1: Open locally
-Open this folder in VS Code. Install the **Live Server** extension, right-click `index.html`, and choose **Open with Live Server**. No npm installation is needed.
+## Registration
 
-## Step 2: Customize before publishing
-- The JIT Travels logo is in `jit-travels-logo.jpg`; replace it only if a higher-resolution approved brand asset is supplied.
-- The hero uses the site's red, orange and yellow palette; the JIT Travels logo remains in the header and footer.
-- The hero plays `Images/workshop-hero-h264.mp4`, a web-compatible H.264/AAC portrait version of `Images/Video file.mp4`. Include the converted file when deploying the site.
-- Confirm facilitator names and session topics.
-- Confirm workshop logistics for 14–18 December 2026, including the published UK and Nigeria times.
-- Replace each distinct payment placeholder in `script.js` with its approved HTTPS payment URL: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
-- Confirm the Early Bird availability and terms for the Nigeria / Online package.
-- Publish the giveaway eligibility rules, sponsor approvals, winner-selection process and a direct link to the qualification instructions.
-- Confirm the sponsored Tilcare opportunity, participant selection and session details.
-- Verify the contact WhatsApp number.
+Visitors select a package and submit their contact information. Registrations are
+stored in Supabase with `payment_status` set to `pending` and
+`registration_status` set to `pending_payment`. The acknowledgement includes a
+registration ID and explains that payment instructions will follow separately.
+There is no payment integration or payment redirect.
 
-## Step 3: Package checkout
-The grant form temporarily saves its answers in the current browser session and then shows the package options. It does not send an application to the organisers. Package forms show an error while payment links are unavailable; they no longer open WhatsApp. Replace the three distinct values in `script.js` with approved HTTPS URLs: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
+The grant form stores its answers in the browser session only. They are sent to
+the organisers **only when** the visitor also submits the package registration
+form. Grant selection and awards are not guaranteed.
 
-Grant applications need a secure server-side submission and email delivery service before they can be received by the organisers. Grant applicants are prevented from proceeding to checkout until that delivery is implemented; otherwise their details would be lost. Do not treat the three-second loading indicator as confirmation that an application was received.
+## Database setup
 
-For live payments, implement a backend (e.g. Supabase Edge Functions or Node.js):
-1. Create a pending registration in a protected database.
-2. POST the package ID to your backend, not the price. Validate package and price server-side.
-3. Initialize the Paystack transaction using a secret key stored only on the server.
-4. Redirect to Paystack's authorization URL or use a securely configured checkout.
-5. Handle Paystack callback AND verified webhook. Verify transaction reference, amount, currency, status and customer/registration association server-side.
-6. Mark registration paid only after successful verification. Ensure idempotency and log events.
-7. Send a confirmation email and participant access instructions after verified payment.
-8. Add an admin dashboard and refund/cancellation workflows if required.
+1. Create a Supabase project and run
+   [`supabase/workshop_registrations.sql`](supabase/workshop_registrations.sql)
+   in its SQL Editor. It creates the table, enables row-level security and
+   revokes access from the public `anon` and `authenticated` roles.
+2. Obtain the project URL and service-role key from the Supabase dashboard.
+   The service-role key bypasses row-level security and must remain secret.
+   Never put it in website files, browser JavaScript or version control.
 
-Never put a Paystack secret key in `script.js`, never trust a frontend success message as proof of payment, and never claim the demo enquiry form is a completed registration.
+## Cloudflare deployment
+
+The existing `uk-workshop-website` Worker serves the static site from the Git
+repository. Deploy the registrations API as a **separate** Worker, without
+replacing the website Worker. The site posts to `/api/registrations`; a
+standalone `workers.dev` deployment will not receive these requests.
+[`worker/wrangler.jsonc`](worker/wrangler.jsonc) configures the API-only route
+`workshop.jitglobalconsult.com/api/registrations` for the Cloudflare zone.
+The more specific API route must point to the API Worker; leave the existing
+website routes and custom domain on the static website Worker.
+
+Deploy [`worker/registrations.js`](worker/registrations.js) separately using
+`npx wrangler deploy --config worker/wrangler.jsonc` from the repository root,
+after authenticating Wrangler to the correct Cloudflare account. The separate
+config is deliberately outside the repository root so the website's Git build
+does not deploy the API Worker in place of its static assets. Add these
+environment secrets to the API Worker through the Cloudflare dashboard or
+Wrangler's secret commands:
+
+- `SUPABASE_URL`: the Supabase project's HTTPS URL.
+- `SUPABASE_SERVICE_ROLE_KEY`: the project's service-role key.
+
+For optional administrator email notifications, configure all three:
+`RESEND_API_KEY`, `ADMIN_EMAIL` and `RESEND_FROM_EMAIL`. The sender must be
+permitted by Resend. If none are configured, no notification is sent; incomplete
+configuration or delivery failures are logged in the Worker. A notification
+failure does not undo a saved registration, so check the Worker logs and
+Supabase for operational follow-up.
+
+## Verification
+
+Opening `index.html` directly or serving it with Live Server displays the
+website but does not provide the registration API. After deploying the Worker
+and route, submit a test registration through the published HTTPS website.
+Verify the registration ID, selected package, details and both pending statuses
+in Supabase's Table Editor. Also check invalid submissions and retry behavior.
+Remove or clearly identify test records according to your operational practice.
+
+Before publishing, confirm workshop logistics, package terms, grant eligibility
+and selection rules, facilitator details and contact information. Include the
+hero video file `Images/workshop-hero-h264.mp4` with the static site.
