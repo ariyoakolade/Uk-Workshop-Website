@@ -6,7 +6,7 @@ Open this folder in VS Code. Install the **Live Server** extension, right-click 
 ## Step 2: Customize before publishing
 - The JIT Travels logo is in `jit-travels-logo.jpg`; replace it only if a higher-resolution approved brand asset is supplied.
 - The hero uses the site's red, orange and yellow palette; the JIT Travels logo remains in the header and footer.
-- Add approved speaker photos, confirmed names and session topics.
+- Confirm facilitator names and session topics.
 - Confirm workshop logistics for 14–18 December 2026, including the published UK and Nigeria times.
 - Replace each distinct payment placeholder in `script.js` with its approved HTTPS payment URL: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
 - Confirm the Early Bird availability and terms for the Nigeria / Online package.
@@ -15,7 +15,9 @@ Open this folder in VS Code. Install the **Live Server** extension, right-click 
 - Verify the contact WhatsApp number.
 
 ## Step 3: Package checkout
-The page has an eight-step registration flow below the hero and package-specific registration forms on the package cards. Forms identify the selected package and redirect to its HTTPS checkout URL when configured. Until then, submission opens a WhatsApp enquiry for payment instructions; it does not process or confirm payment or store personal data. Replace the three distinct values in `script.js` with the approved URLs: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
+The grant form temporarily saves its answers in the current browser session and then shows the package options. It does not send an application to the organisers. Package forms show an error while payment links are unavailable; they no longer open WhatsApp. Replace the three distinct values in `script.js` with approved HTTPS URLs: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
+
+Grant applications need a secure server-side submission and email delivery service before they can be received by the organisers. Grant applicants are prevented from proceeding to checkout until that delivery is implemented; otherwise their details would be lost. Do not treat the three-second loading indicator as confirmation that an application was received.
 
 For live payments, implement a backend (e.g. Supabase Edge Functions or Node.js):
 1. Create a pending registration in a protected database.

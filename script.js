@@ -36,22 +36,21 @@ function continueWithPayment(data, statusElement) {
   const chosen = packages[packageId];
   if (!chosen) return false;
   const paymentUrl = paymentLinks[packageId];
-  const message = [
-    'Hello JIT Travels, I have completed the registration form for the UK Strategic Business Growth Workshop 2026.',
-    `Package: ${chosen.name} (${chosen.amount})`,
-    `Name: ${String(data.get('fullName') || '').trim()}`,
-    `Email: ${String(data.get('email') || '').trim()}`,
-    `Phone: ${String(data.get('phone') || '').trim()}`,
-    `Business / profession: ${String(data.get('business') || 'Not provided').trim()}`,
-    `Growth focus: ${String(data.get('growthFocus') || 'Not provided').trim()}`,
-    `Participant profile: ${String(data.get('profile') || 'Not provided').trim()}`,
-    'Please send me the payment instructions for this package.'
-  ].join('\n');
-
+  let grantEnquiry = null;
+  try {
+    const savedEnquiry = sessionStorage.getItem('jitGrantEnquiry');
+    grantEnquiry = savedEnquiry ? JSON.parse(savedEnquiry) : null;
+  } catch {
+    statusElement.textContent = 'Your grant application details could not be retrieved. Please return to the grant form and try again.';
+    return false;
+  }
   if (!paymentUrl || paymentUrl.startsWith('[')) {
-    statusElement.textContent = 'Continue in WhatsApp to receive payment instructions for this package.';
-    const whatsapp = window.open(`https://wa.me/2347079890161?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-    return Boolean(whatsapp);
+    statusElement.textContent = 'Online payment is not available yet. Please contact JIT Travels at +234 707 989 0161.';
+    return false;
+  }
+  if (grantEnquiry && typeof grantEnquiry === 'object') {
+    statusElement.textContent = 'Your grant application has not been submitted. Application delivery is not available yet; please contact JIT Travels at +234 707 989 0161.';
+    return false;
   }
 
   let destination;
@@ -75,69 +74,51 @@ document.querySelectorAll('[data-package]').forEach(button => button.addEventLis
   const chosen = packages[selection];
   if (!chosen) return;
   form.reset();
+  registrationStatus.textContent = '';
   packageInput.value = selection;
   packageSummary.textContent = `${chosen.name} • ${chosen.amount}`;
+  try {
+    const savedEnquiry = sessionStorage.getItem('jitGrantEnquiry');
+    const grantEnquiry = savedEnquiry ? JSON.parse(savedEnquiry) : null;
+    if (grantEnquiry && typeof grantEnquiry === 'object') {
+      form.elements.fullName.value = String(grantEnquiry.fullName || '');
+      form.elements.email.value = String(grantEnquiry.email || '');
+      form.elements.phone.value = String(grantEnquiry.phone || '');
+      form.elements.business.value = String(grantEnquiry.businessName || '');
+    }
+  } catch {
+    registrationStatus.textContent = 'Your grant application details could not be retrieved. Please return to the grant form and try again.';
+  }
   dialog.showModal();
 }));
 
-const qualificationForm = document.getElementById('qualificationForm');
-const qualificationSteps = [...qualificationForm.querySelectorAll('.qualification-step')];
-const qualificationStepLabel = document.getElementById('qualificationStepLabel');
-const qualificationProgress = document.getElementById('qualificationProgress');
-const qualificationProgressBar = qualificationProgress.parentElement;
-const qualificationBack = document.getElementById('qualificationBack');
-const qualificationNext = document.getElementById('qualificationNext');
-const qualificationSubmit = document.getElementById('qualificationSubmit');
-const qualificationStatus = document.getElementById('qualificationStatus');
-const qualificationSummary = document.getElementById('qualificationSummary');
-let currentQualificationStep = 1;
-
-function renderQualificationStep() {
-  qualificationSteps.forEach((step, index) => {
-    step.hidden = index + 1 !== currentQualificationStep;
-  });
-  qualificationStepLabel.textContent = `Step ${currentQualificationStep} of ${qualificationSteps.length}`;
-  qualificationProgress.style.width = `${currentQualificationStep / qualificationSteps.length * 100}%`;
-  qualificationProgressBar.setAttribute('aria-valuenow', String(currentQualificationStep));
-  qualificationBack.hidden = currentQualificationStep === 1;
-  qualificationNext.hidden = currentQualificationStep === qualificationSteps.length;
-  qualificationSubmit.hidden = currentQualificationStep !== qualificationSteps.length;
-  qualificationStatus.textContent = '';
-
-  if (currentQualificationStep === qualificationSteps.length) {
-    const data = new FormData(qualificationForm);
-    const chosen = packages[String(data.get('package'))];
-    qualificationSummary.textContent = `${chosen ? `${chosen.name} • ${chosen.amount}` : 'Choose a package'} | ${String(data.get('fullName') || 'Name not entered')} | ${String(data.get('email') || 'Email not entered')} | ${String(data.get('phone') || 'Phone not entered')}`;
-  }
-}
-
-function validateCurrentQualificationStep() {
-  const activeStep = qualificationSteps[currentQualificationStep - 1];
-  for (const field of activeStep.querySelectorAll('input, textarea, select')) {
-    if (!field.checkValidity()) {
-      field.reportValidity();
-      return false;
-    }
-  }
-  return true;
-}
-
-qualificationNext.addEventListener('click', () => {
-  if (!validateCurrentQualificationStep()) return;
-  currentQualificationStep = Math.min(currentQualificationStep + 1, qualificationSteps.length);
-  renderQualificationStep();
-});
-qualificationBack.addEventListener('click', () => {
-  currentQualificationStep = Math.max(currentQualificationStep - 1, 1);
-  renderQualificationStep();
-});
-qualificationForm.addEventListener('submit', event => {
+const grantScreeningForm = document.getElementById('grantScreeningForm');
+const grantScreeningStatus = document.getElementById('grantScreeningStatus');
+const grantSubmit = grantScreeningForm.querySelector('.grant-submit');
+const grantSubmitLabel = grantSubmit.querySelector('.grant-submit-label');
+grantScreeningForm.addEventListener('submit', event => {
   event.preventDefault();
-  if (!validateCurrentQualificationStep()) return;
-  const opened = continueWithPayment(new FormData(qualificationForm), qualificationStatus);
-  if (opened) qualificationStatus.textContent = 'Your package-specific payment instructions are opening in WhatsApp.';
+  if (!grantScreeningForm.reportValidity()) return;
+
+  const grantEnquiry = Object.fromEntries(new FormData(grantScreeningForm));
+  try {
+    sessionStorage.setItem('jitGrantEnquiry', JSON.stringify(grantEnquiry));
+  } catch {
+    grantScreeningStatus.textContent = 'Your application details could not be saved in this browser. Please enable site storage and try again.';
+    return;
+  }
+  grantScreeningStatus.textContent = 'Details saved in this browser only. Your application has not yet been sent to the organisers.';
+  grantSubmit.disabled = true;
+  grantSubmit.setAttribute('aria-busy', 'true');
+  grantSubmitLabel.textContent = 'Preparing packages…';
+  setTimeout(() => {
+    grantSubmit.disabled = false;
+    grantSubmit.removeAttribute('aria-busy');
+    grantSubmitLabel.textContent = 'Apply for the ₦2M Grant';
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+    document.getElementById('packages').scrollIntoView({ behavior });
+  }, 3000);
 });
-renderQualificationStep();
 
 document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
