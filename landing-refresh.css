@@ -34,6 +34,33 @@
 .benefit-nudge strong{color:#78101a}
 .benefit-nudge span{color:var(--muted)}
 .benefit-nudge a{color:var(--red);font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.itinerary-section{background:linear-gradient(145deg,#fff8eb,#fff 60%,#fff3df)}
+.itinerary-heading{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:32px}
+.itinerary-heading>div:first-child{max-width:680px}
+.itinerary-heading h2{margin:10px 0;font-size:clamp(34px,4.5vw,54px);line-height:1.13}
+.itinerary-heading p{margin:0;font-size:16px}
+.itinerary-date{flex-shrink:0;padding:19px 24px;border-radius:16px;background:#810d1b;color:#fff;box-shadow:0 12px 25px #79091626}
+.itinerary-date span,.itinerary-date strong{display:block}
+.itinerary-date span{color:#ffdc76;font-size:10px;font-weight:900;letter-spacing:1.2px}
+.itinerary-date strong{margin-top:5px;font-size:19px}
+.itinerary-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:0;padding:0;list-style:none}
+.itinerary-card{display:flex;flex-direction:column;min-width:0;padding:23px;border-radius:17px;background:#fff;box-shadow:0 10px 28px #521b080d}
+.itinerary-card-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.itinerary-day{padding:6px 9px;border-radius:7px;background:#fff0df;color:#a2111c;font-size:11px;font-weight:900;letter-spacing:.7px}
+.itinerary-card time{color:#755c50;font-size:12px;font-weight:800}
+.itinerary-card h3{margin:20px 0 8px;color:#351e1b;font-size:20px;line-height:1.25}
+.itinerary-card p{margin:0 0 18px;font-size:14px;line-height:1.6}
+.itinerary-tag{margin-top:auto;color:#a2111c;font-size:10px;font-weight:900;letter-spacing:.8px}
+.itinerary-travel{background:#fffaf0}
+.itinerary-footer{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:28px}
+.itinerary-footer p{max-width:720px;margin:0;font-size:13px}
+.itinerary-footer .btn{flex-shrink:0}
+@media(max-width:680px){
+  .itinerary-heading,.itinerary-footer{align-items:stretch;flex-direction:column}
+  .itinerary-heading{gap:20px}
+  .itinerary-date{text-align:center}
+  .itinerary-card h3{margin-top:16px}
+}
 .finance-section{background:#fff}
 .finance-panel{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:clamp(30px,5vw,64px);border-radius:28px;background:linear-gradient(125deg,#780b17,#b70d19 62%,#dc4b1b);color:#fff;box-shadow:0 22px 55px #62110d24}
 .finance-copy h2{color:#fff;font-size:clamp(34px,4vw,49px)}
