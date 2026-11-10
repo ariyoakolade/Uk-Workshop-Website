@@ -35,6 +35,7 @@ const registrationId = document.getElementById('registrationId');
 const registrationFields = document.getElementById('registrationFields');
 const registrationNote = document.getElementById('registrationNote');
 const receiptLink = document.getElementById('receiptLink');
+const copyStatus = document.getElementById('copyStatus');
 let pendingRegistration = null;
 let submitting = false;
 
@@ -44,6 +45,7 @@ document.querySelectorAll('[data-package]').forEach(button => button.addEventLis
   if (!chosen) return;
   form.reset();
   registrationStatus.textContent = '';
+  copyStatus.textContent = '';
   registrationSuccess.hidden = true;
   registrationSubmit.hidden = false;
   registrationFields.hidden = false;
@@ -96,6 +98,18 @@ grantScreeningForm.addEventListener('submit', event => {
 document.getElementById('closeDialog').addEventListener('click', () => { if (!submitting) dialog.close(); });
 dialog.addEventListener('click', event => { if (event.target === dialog && !submitting) dialog.close(); });
 dialog.addEventListener('cancel', event => { if (submitting) event.preventDefault(); });
+document.querySelectorAll('.copy-detail').forEach(button => button.addEventListener('click', async () => {
+  const target = document.getElementById(button.dataset.copyTarget);
+  const label = button.dataset.copyTarget === 'sortCode' ? 'Sort code' : 'Account number';
+  try {
+    if (!navigator.clipboard || !target || !target.textContent) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(target.textContent);
+    copyStatus.textContent = `${label} copied.`;
+  } catch (error) {
+    console.error('Could not copy bank detail:', error);
+    copyStatus.textContent = `Could not copy ${label.toLowerCase()}. Please select and copy it manually.`;
+  }
+}));
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -151,7 +165,8 @@ form.addEventListener('submit', async event => {
         : 'Package price: ₦100,000 Early Bird / ₦150,000 Standard. Contact our team if you are unsure which price applies.';
     const isPounds = details.package === 'ukResidents';
     document.getElementById('accountName').textContent = isPounds ? 'JIT TRAVELS LTD' : 'JIT TRAVELS';
-    document.getElementById('accountNumber').textContent = isPounds ? '0238023829 (GBP)' : '0235159996';
+    document.getElementById('accountNumber').textContent = isPounds ? '0238023829' : '0235159996';
+    document.getElementById('accountCurrency').hidden = !isPounds;
     document.getElementById('sortCode').textContent = isPounds ? '032192339' : '';
     document.getElementById('sortCodeRow').hidden = !isPounds;
     const message = `Hello, I would like to share my payment receipt for ${chosen.name}. Registration ID: ${result.registrationId}.`;
