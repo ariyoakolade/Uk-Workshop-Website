@@ -26,6 +26,11 @@ siteNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () 
   menuToggle.textContent = '☰';
 }));
 
+const heroVideo = document.getElementById('heroVideo');
+const heroVideoError = document.getElementById('heroVideoError');
+heroVideo.addEventListener('error', () => { heroVideoError.hidden = false; });
+heroVideo.addEventListener('loadedmetadata', () => { heroVideoError.hidden = true; });
+
 const dialog = document.getElementById('registrationDialog');
 const form = document.getElementById('registrationForm');
 const packageInput = document.getElementById('packageInput');

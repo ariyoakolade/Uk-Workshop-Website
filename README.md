@@ -6,6 +6,7 @@ Open this folder in VS Code. Install the **Live Server** extension, right-click 
 ## Step 2: Customize before publishing
 - The JIT Travels logo is in `jit-travels-logo.jpg`; replace it only if a higher-resolution approved brand asset is supplied.
 - The hero uses the site's red, orange and yellow palette; the JIT Travels logo remains in the header and footer.
+- The hero plays `Images/workshop-hero-h264.mp4`, a web-compatible H.264/AAC portrait version of `Images/Video file.mp4`. Include the converted file when deploying the site.
 - Confirm facilitator names and session topics.
 - Confirm workshop logistics for 14–18 December 2026, including the published UK and Nigeria times.
 - Replace each distinct payment placeholder in `script.js` with its approved HTTPS payment URL: `[PHYSICAL_PAYMENT_LINK]`, `[UK_RESIDENT_PAYMENT_LINK]` and `[ONLINE_PAYMENT_LINK]`.
