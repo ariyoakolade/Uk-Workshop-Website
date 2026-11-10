@@ -5,8 +5,15 @@
 Visitors select a package and submit their contact information. Registrations are
 stored in Supabase with `payment_status` set to `pending` and
 `registration_status` set to `pending_payment`. The acknowledgement includes a
-registration ID and explains that payment instructions will follow separately.
-There is no payment integration or payment redirect.
+registration ID and package-specific bank transfer details. Participants can
+open WhatsApp to attach and send their receipt. Neither showing bank details
+nor opening WhatsApp verifies payment or confirms a place; staff must verify
+transfers separately. There is no Paystack integration.
+
+The International Physical package requires a ₦1,000,000 deposit for visa
+processing, with the remaining ₦2,500,000 payable after visa issuance.
+Nigeria / Online displays both Early Bird and Standard prices; the team should
+confirm which price applies when necessary.
 
 The grant form stores its answers in the browser session only. They are sent to
 the organisers **only when** the visitor also submits the package registration
@@ -62,4 +69,6 @@ Remove or clearly identify test records according to your operational practice.
 
 Before publishing, confirm workshop logistics, package terms, grant eligibility
 and selection rules, facilitator details and contact information. Include the
-hero video file `Images/workshop-hero-h264.mp4` with the static site.
+hero video file `Images/workshop-hero-web.mp4` with the static site. The original
+and larger conversion are retained locally but excluded from Cloudflare static
+assets by `.assetsignore`, because they exceed the per-file size limit.

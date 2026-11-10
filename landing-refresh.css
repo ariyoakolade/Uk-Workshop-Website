@@ -152,7 +152,14 @@
 .form-status:empty{display:none}
 .registration-success{margin:12px 0;padding:16px;border:1px solid #d5e7d5;border-radius:12px;background:#f2faf2;color:#204b20;overflow-wrap:anywhere}
 .registration-success p{margin:8px 0 0;color:inherit;font-size:13px}
-.registration-success[hidden],#registrationSubmit[hidden]{display:none}
+.registration-success h3{margin:0;font-size:20px}
+.bank-details{margin:16px 0;padding:16px;border:1px solid #e8ca76;border-radius:12px;background:#fff9e7;color:#241b1a}
+.bank-details h3{font-size:17px}
+.receipt-link{margin-top:18px;text-align:center}
+.btn,.site-nav .nav-cta{min-height:60px;padding:15px 20px;font-size:16px;font-weight:900;line-height:1.35;text-align:center}
+.site-nav .nav-cta{display:inline-flex;align-items:center;justify-content:center}
+.about-layout .btn-dark{background:#000}
+.registration-success[hidden],#registrationSubmit[hidden],#registrationFields[hidden],#registrationNote[hidden],#sortCodeRow[hidden]{display:none}
 .pricing-grid-three{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:1fr;max-width:1160px;align-items:stretch}
 .pricing-grid-three .price-card{padding:32px 25px}
 .pricing-grid-three .price-card.featured{transform:none;background:linear-gradient(180deg,#fffaf0,#fff)}

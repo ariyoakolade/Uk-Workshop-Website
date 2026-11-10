@@ -32,6 +32,9 @@ const registrationStatus = document.getElementById('registrationStatus');
 const registrationSubmit = document.getElementById('registrationSubmit');
 const registrationSuccess = document.getElementById('registrationSuccess');
 const registrationId = document.getElementById('registrationId');
+const registrationFields = document.getElementById('registrationFields');
+const registrationNote = document.getElementById('registrationNote');
+const receiptLink = document.getElementById('receiptLink');
 let pendingRegistration = null;
 let submitting = false;
 
@@ -43,6 +46,8 @@ document.querySelectorAll('[data-package]').forEach(button => button.addEventLis
   registrationStatus.textContent = '';
   registrationSuccess.hidden = true;
   registrationSubmit.hidden = false;
+  registrationFields.hidden = false;
+  registrationNote.hidden = false;
   packageInput.value = selection;
   packageSummary.textContent = `${chosen.name} • ${chosen.amount}`;
   try {
@@ -136,9 +141,26 @@ form.addEventListener('submit', async event => {
       return;
     }
     if (result.registrationId !== pendingRegistration.id) throw new Error('Invalid registration response');
+    const chosen = packages[details.package];
+    if (!chosen) throw new Error('Invalid package in registration response');
     registrationId.textContent = result.registrationId;
+    document.getElementById('paymentAmount').textContent = details.package === 'internationalPhysical'
+      ? 'Pay a ₦1,000,000 deposit for visa processing. The remaining ₦2,500,000 is payable after visa issuance.'
+      : details.package === 'ukResidents'
+        ? 'Package price: £250.'
+        : 'Package price: ₦100,000 Early Bird / ₦150,000 Standard. Contact our team if you are unsure which price applies.';
+    const isPounds = details.package === 'ukResidents';
+    document.getElementById('accountName').textContent = isPounds ? 'JIT TRAVELS LTD' : 'JIT TRAVELS';
+    document.getElementById('accountNumber').textContent = isPounds ? '0238023829 (GBP)' : '0235159996';
+    document.getElementById('sortCode').textContent = isPounds ? '032192339' : '';
+    document.getElementById('sortCodeRow').hidden = !isPounds;
+    const message = `Hello, I would like to share my payment receipt for ${chosen.name}. Registration ID: ${result.registrationId}.`;
+    receiptLink.href = `https://wa.me/2347079890161?text=${encodeURIComponent(message)}`;
+    registrationFields.hidden = true;
+    registrationNote.hidden = true;
     registrationSuccess.hidden = false;
     registrationSubmit.hidden = true;
+    receiptLink.focus();
     try {
       sessionStorage.removeItem('jitGrantEnquiry');
     } catch (error) {
@@ -151,7 +173,7 @@ form.addEventListener('submit', async event => {
   } finally {
     submitting = false;
     registrationSubmit.disabled = false;
-    registrationSubmit.textContent = 'Submit registration';
+    registrationSubmit.textContent = 'Proceed to make payment';
   }
 });
 
