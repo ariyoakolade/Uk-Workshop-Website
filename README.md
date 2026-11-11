@@ -53,10 +53,46 @@ Wrangler's secret commands:
 
 For optional administrator email notifications, configure all three:
 `RESEND_API_KEY`, `ADMIN_EMAIL` and `RESEND_FROM_EMAIL`. The sender must be
-permitted by Resend. If none are configured, no notification is sent; incomplete
-configuration or delivery failures are logged in the Worker. A notification
+permitted by Resend. If `ADMIN_EMAIL` is not configured, no administrator
+notification is sent; other configuration or delivery failures are logged in the Worker. A notification
 failure does not undo a saved registration, so check the Worker logs and
 Supabase for operational follow-up.
+
+## Participant emails
+
+The registrations Worker also checks the email queue every five minutes. It
+sends a thank-you and payment reminder after registration, including the grant
+eligibility steps when a grant application was submitted. Once staff verify
+**full payment** and set `payment_status` to exactly `paid` in Supabase, it
+sends a second email containing the official WhatsApp group invitation.
+The international package's initial deposit alone is not full payment.
+
+To enable this safely:
+
+1. In Resend, verify the `jitglobalconsult.com` domain and set up
+   `info@jitglobalconsult.com` as a permitted sender. Configure
+   `RESEND_API_KEY` and `RESEND_FROM_EMAIL` on the registrations Worker;
+   never commit the API key. Administrator notifications still require
+   `ADMIN_EMAIL` as described above.
+2. Set `WORKSHOP_GROUP_URL` as a Worker secret to the official WhatsApp
+   invitation link. Do not publish this secret in website files.
+3. Run [`supabase/workshop_emails.sql`](supabase/workshop_emails.sql) in the
+   Supabase SQL Editor **before** deploying the updated Worker. The migration
+   leaves existing registrations disabled for email and enables new ones by
+   default. In Table Editor, review existing rows and set `email_enabled` to
+   `true` for each genuine registration that should receive emails. Leave test
+   registrations disabled. Do not mark a row paid without independently
+   verifying full payment.
+4. Deploy the registrations Worker using the command above. Verify that its
+   five-minute cron trigger is active, then monitor its logs and check the
+   `interest_email_sent_at` and `group_email_sent_at` columns. These timestamps
+   indicate acceptance by Resend, not delivery to the inbox.
+
+Failed sends are logged and retried after 30 minutes. Resend's idempotency key
+reduces duplicate emails when a request succeeds but the result cannot be
+recorded; its deduplication window is limited, so investigate persistent errors
+promptly. Resend setup, migration, review of existing rows and deployment are
+required before these emails will run.
 
 ## Verification
 

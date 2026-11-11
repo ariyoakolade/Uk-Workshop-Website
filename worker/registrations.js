@@ -1,3 +1,5 @@
+import { processEmails } from './emails.js';
+
 const PACKAGES = {
   internationalPhysical: 'International Physical Participation',
   ukResidents: 'UK Residents',
@@ -61,7 +63,7 @@ async function fingerprint(registration) {
 }
 
 async function notifyAdmin(env, registration) {
-  if (!env.RESEND_API_KEY && !env.ADMIN_EMAIL && !env.RESEND_FROM_EMAIL) return;
+  if (!env.ADMIN_EMAIL) return;
   if (!env.RESEND_API_KEY || !env.ADMIN_EMAIL || !env.RESEND_FROM_EMAIL) {
     console.error('Registration email notification configuration is incomplete.');
     return;
@@ -84,6 +86,10 @@ async function notifyAdmin(env, registration) {
 }
 
 export default {
+  async scheduled(_controller, env) {
+    await processEmails(env);
+  },
+
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname !== '/api/registrations') return respond(404, { error: 'Not found.' });

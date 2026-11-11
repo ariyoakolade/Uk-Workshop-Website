@@ -1,8 +1,10 @@
 {
   "name": "jit-workshop-registrations",
   "main": "registrations.js",
-  "compatibility_date": "2026-01-01",
-  "workers_dev": false,
+  "compatibility_date": "2026-11-10",
+  "workers_dev": true,
+  "observability": { "enabled": true, "logs": { "enabled": true } },
+  "triggers": { "crons": ["*/5 * * * *"] },
   "routes": [
     { "pattern": "workshop.jitglobalconsult.com/api/registrations", "zone_name": "jitglobalconsult.com" }
   ]
